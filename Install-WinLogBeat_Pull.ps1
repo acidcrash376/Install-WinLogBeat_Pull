@@ -251,28 +251,28 @@ Function Restart-WinLogBeat ()
     If(($testWinlogBeat).Status -eq 'Running')                                                   # If yes...
     {
         #Restart-Service SplunkForwarder                                                         # Restart-Service causes issues, using alternate method
-        & "C:\program files\Elastic\Beat\"+$beatsver+"winlogbeat\winlogbeat.exe" "restart" > $null           # Restart Splunk service
+        & "C:\program files\Elastic\Beat\"+$beatsver+"winlogbeat\winlogbeat.exe" "restart" > $null           # Restart WinLogBeat service
         #Start-Service SplunkForwarder
-        $testWinlogBeat1 = Get-Service winlogbeat                                                # Check whether Splunk service has restarted successfully
+        $testWinlogBeat1 = Get-Service winlogbeat                                                # Check whether WinLogBeat service has restarted successfully
         if(($testWinlogBeat1).Status -eq 'Running')
         {
             Write-Verbose "WinLogBeat has restarted successfully"
             Write-InstallLog -logstring "$(Get-DTG) - WinLogBeat has been restarted successfully"
         } else {
             Write-Verbose "WinLogBeat has failed to restart successfully"
-            Write-ErrorLog -logstring "$(Get-DTG) - WinLogBeat could not be started" # Splunk has failed to start, log it and exit script
+            Write-ErrorLog -logstring "$(Get-DTG) - WinLogBeat could not be started" # WinLogBeat has failed to start, log it and exit script
             exit
         }
     } else {
-        & "C:\program files\splunkuniversalforwarder\bin\splunk.exe" "start" > $null             # Splunk was not running, starting it now
-        $testWinlogBeat2 = Get-Service WinLogBeat                                                # Checks if Splunk has started successfully
+        & "C:\program files\Elastic\Beat\"+$beatsver+"winlogbeat\winlogbeat.exe" "start" > $null             # WinLogBeat was not running, starting it now
+        $testWinlogBeat2 = Get-Service WinLogBeat                                                # Checks if WinLogBeat has started successfully
         if(($testWinlogBeat2).Status -eq 'Running')
         {
             Write-Verbose "WinLogBeat has started successfully"
             Write-InstallLog -logstring "$(Get-DTG) - WinLogBeatr has been restarted successfully"
         } else {
             Write-Verbose "WinLogBeat has failed to start"
-            Write-ErrorLog -logstring "$(Get-DTG) - WinLogBeat could not be started"             # Splunk has failed to start, log it and exit script
+            Write-ErrorLog -logstring "$(Get-DTG) - WinLogBeat could not be started"             # WinLogBeat has failed to start, log it and exit script
             exit
         }
     }
