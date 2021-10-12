@@ -12,12 +12,12 @@
 .OUTPUTS
   None
 .NOTES
-  Version:        1.0.1 Beta
+  Version:        1.0.2 Beta
   Author:         Acidcrash376
   Creation Date:  11/09/2021
   Last Update:	  12/10/2021
-  Purpose/Change: Beta Release 
-  Web:            https://github.com/acidcrash376/Install-winlogbeat
+  Purpose/Change: Change logs to go to a separate directory. Fileshare should be read only and Logshare should be read, write & modify. To restrict malicious changes to the script by un-authorised users. 
+  Web:            https://github.com/acidcrash376/Install-WinLogBeat_Pull
 .PARAMETER Verbosemode 
   Not Required
   No value required. Enables Verbose output for the script.
@@ -40,9 +40,10 @@ if ($verbosemode -eq $true)
 ########################
 # Edit these variables #
 ########################
-$ErrorLogfile = "\\cydc01\Share\$(gc env:computername)\Error.log"                               # Path for Error Log, edit the path
-$InstallLogfile = "\\cydc01\Share\$(gc env:computername)\Install.log"                           # Path for Install Log, edit the path
+$ErrorLogfile = "\\cydc01\Share2\$(gc env:computername)\Error.log"                               # Path for Error Log, edit the path
+$InstallLogfile = "\\cydc01\Share2\$(gc env:computername)\Install.log"                           # Path for Install Log, edit the path
 $fileshare = "\\cydc01\Share\"                                                                  # Path for fileshare, edit the path
+$logshare = "\\cydc01\Share2"                                                                   # Path for Log share, edit the path
 $installermsi = "winlogbeat-oss-7.13.4-windows-x86_64.msi"                                      # Define the filename of the installer msi
 $beatsver = "7.13.4"													                        # Define the WinLogBeat version
 #########################
@@ -53,28 +54,28 @@ $beatsver = "7.13.4"													                        # Define the WinLogBeat
 Function Write-ErrorLogHead
 {
    Param ([string]$logstring)
-   New-Item -Path $fileshare -Name "$(gc env:computername)" -ItemType "directory" -Force > $null
+   New-Item -Path $logshare -Name "$(gc env:computername)" -ItemType "directory" -Force > $null
    Add-content $ErrorLogfile -value $logstring
 }
 
 Function Write-InstallLogHead
 {
    Param ([string]$logstring)
-   New-Item -Path $fileshare -Name "$(gc env:computername)" -ItemType "directory" -Force > $null
+   New-Item -Path $logshare -Name "$(gc env:computername)" -ItemType "directory" -Force > $null
    Add-content $InstallLogfile -value $logstring
 }
 
 Function Write-ErrorLog
 {
    Param ([string]$logstring)
-   New-Item -Path $fileshare -Name "$(gc env:computername)" -ItemType "directory" -Force > $null
+   New-Item -Path $logshare -Name "$(gc env:computername)" -ItemType "directory" -Force > $null
    Add-content $ErrorLogfile -value $logstring
 }
 
 Function Write-InstallLog
 {
    Param ([string]$logstring)
-   New-Item -Path $fileshare -Name "$(gc env:computername)" -ItemType "directory" -Force > $null
+   New-Item -Path $logshare -Name "$(gc env:computername)" -ItemType "directory" -Force > $null
    Add-content $InstallLogfile -value $logstring
 }
 
@@ -173,7 +174,7 @@ Function Check-ConfHash ()
             
             Write-Verbose "winlogbeat.yml does not match, replacing the config"
             Write-InstallLog -logstring "$(Get-DTG) - winlogbeat.yml do not match, replacing the config"  # If they don't match, log it
-			Copy-Item $winlogbeatconf -Destination $localwinlogbeatconf -Force        # Copy the file from the file server and overwrite the local version
+			Copy-Item $winlogbeatconf -Destination $localwinlogbeatconf -Force                   # Copy the file from the file server and overwrite the local version
 			Install-Sysmon
 
         }
@@ -181,7 +182,7 @@ Function Check-ConfHash ()
         
         Write-Verbose "winlogbeat.yml is not present, copying over"
         Write-InstallLog -logstring "$(Get-DTG) - winlogbeat.yml does not exist"                 # If winlogbeat.yml is not present, log it
-		Copy-Item $winlogbeatconf -Destination $localwinlogbeatconf -Force               # Copy the winlogbeat.yml from the fileserver to the local machine
+		Copy-Item $winlogbeatconf -Destination $localwinlogbeatconf -Force                       # Copy the winlogbeat.yml from the fileserver to the local machine
         Write-InstallLog -logstring "$(Get-DTG) - winlogbeat.yml copied from fileserver"         # Log it
 		Install-Sysmon
     
@@ -237,11 +238,11 @@ Function Install-Sysmon ()
             } else {
                 Write-Verbose "Sysmon is running"
                 Write-InstallLog "$(Get-DTG) - Sysmon running"                                   # Logs it running successfully
-				Restart-WinLogBeat                                               # Call Restart-WinLogBeat function
+				Restart-WinLogBeat                                                               # Call Restart-WinLogBeat function
             } 
         } else { 
             Write-Verbose "Stopping Sysmon"
-			& $env:ProgramFiles\Sysmon\sysmon64.exe -u > $null                       # Checked if sysmon was running and yes
+			& $env:ProgramFiles\Sysmon\sysmon64.exe -u > $null                                   # Checked if sysmon was running and yes
             $sysmon = $fileshare+"sysmon64.exe"                                                  # Defines variable for remote path to the executable
             $sysmonconf = $fileshare+"sysmonconfig-export.xml"                                   # Defines variable for remote path to the config
             Copy-Item $sysmon -Destination $env:ProgramFiles\Sysmon -Force                       # Copy the executable from the share
@@ -275,7 +276,7 @@ Function Restart-WinLogBeat ()
     If(($testWinlogBeat).Status -eq 'Running')                                                   # If yes...
     {
 		Restart-Service winlogbeat
-		$testWinlogBeat1 = Get-Service winlogbeat                                        # Check whether WinLogBeat service has restarted successfully
+		$testWinlogBeat1 = Get-Service winlogbeat                                                # Check whether WinLogBeat service has restarted successfully
         if(($testWinlogBeat1).Status -eq 'Running')
         {
             Write-Verbose "WinLogBeat has restarted successfully"
@@ -286,8 +287,9 @@ Function Restart-WinLogBeat ()
             exit
         }
     } else {
-        Restart-Service winlogbeat
-	$testWinlogBeat2 = Get-Service WinLogBeat                                                # Checks if WinLogBeat has started successfully
+        Write-Verbose "[Line 291]"
+		ReStart-Service winlogbeat
+		$testWinlogBeat2 = Get-Service WinLogBeat                                                # Checks if WinLogBeat has started successfully
         if(($testWinlogBeat2).Status -eq 'Running')
         {
             Write-Verbose "WinLogBeat has started successfully"
@@ -299,6 +301,7 @@ Function Restart-WinLogBeat ()
         }
     }
 }
+
 
 Write-InstallLogHead -logstring "--------------------------------------------"
 Write-InstallLogHead -logstring "|WinLogBeat installation script Install log|"
