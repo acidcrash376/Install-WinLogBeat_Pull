@@ -15,16 +15,20 @@ Computer Configuration > Preferences > Control Panel Settings > Scheduled Task
 ### General
   Name: Install-SplunkForwarder
   User: NT AUTHORITY\System
+  ![Step 2](https://i.imgur.com/fClPn30.png)
 ### Actions
   Start a Program: 
     Script: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
     Arguments: -executionpolicy Bypass -command "& \\Host\share\install-winlogbeat.ps1"
+    ![Step 3](https://i.imgur.com/B11yjkv.png)
+    ![Step 4](https://i.imgur.com/WbEwj0f.png)
 ### Conditions
-  
+  ![Step 5](https://i.imgur.com/SR9Jdil.png)
 ### Settings
-[x]  Stock the task if it runs longer than: 1 Hour
+  Stock the task if it runs longer than: 1 Hour
+  ![Step 6](https://i.imgur.com/bLqrreb.png)
 ### Common
-[x]  Apply once and do not reapply.
-
+  Apply once and do not reapply.
+  ![Step 7](https://i.imgur.com/cQ1jW7h.png)
  
 Apply the GPO to the appropriate Org Unit, then either Gpupdate /force or let the Group Policy sync itself over time
